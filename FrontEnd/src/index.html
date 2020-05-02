@@ -1,0 +1,53 @@
+<html>
+
+<head>
+    <!--Declaracion de Librerias -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <!--Declaracion de StylesSheets-->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/codemirror.css">
+
+    <!--Declaracion de Scripts-->
+    <script type="text/javascript" src="js/tabPage.js"></script>
+    <script type="text/javascript" src="js/archivos.js"></script>
+    <script type="text/javascript" src="js/data.js"></script>
+    <script src="js/codemirror.js"></script>
+
+    <!--Encabezado-->
+    <div class="jumbotron text-center">
+        <h1>Detector de Copias - Java </h1>
+        <p>Cristian Meoño - 201801397</p>
+    </div>
+</head>
+
+<body>
+
+<div class="col-md-12 divcontent">
+    <!--Editor de Texto-->
+    <div id="myTabPage">
+        <button class="btn btn-success col-md-2 " onclick="addTab()">Nueva Pestaña</button>
+        <button class="btn btn-warning col-md-2 " onclick="sendData()">Analizar</button>
+        <button class="btn btn-outline-primary col-md-2" onclick="saveData()">Guardar .java</button>
+        <div class="input-group" style="padding-top: 20;">
+            <div class="custom-file">
+                <input type="file" class="custom-file-input" id="inputFile" onchange="openArchive(event)">
+                <label class="custom-file-label" for="inputFile">Abrir .java</label>
+            </div>
+        </div> 
+        <hr>
+        <ul class="nav nav-tabs nav-fill" id="tabPageBtns">          
+        </ul>
+
+    </div>
+    <hr>
+    <!--Tabla de Errores Lexicos-->
+    <button class="btn btn-outline-danger col-md-4 " onclick="">Guardar como HTML</button>
+    <button class="btn btn-outline-danger col-md-4 " onclick="">Guardar como HTML</button>
+</div>
+
+</body>
+</html>

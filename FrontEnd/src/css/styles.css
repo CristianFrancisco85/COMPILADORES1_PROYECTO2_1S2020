@@ -1,0 +1,29 @@
+.jumbotron {
+    background-color: #2b7cc7;
+    background-size: cover;
+}
+
+
+.divcontent {
+    display: block;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+}
+
+#divtxtJSON  {
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+}
+#divtxtHTML  {
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+}
+
+textarea {
+    white-space: pre;
+    font-family: monospace;
+    font-size: 80pt;
+}
