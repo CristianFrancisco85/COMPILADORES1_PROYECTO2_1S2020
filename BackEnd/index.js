@@ -31,9 +31,9 @@ app.post('/submit', function (req, res) {
 function parsear(){
     let ast;
     try {
-        // invocamos a nuestro parser con el contendio del archivo de entradas
+        // Se llama a parser
         ast = parser.parse(entrada.toString());
-        // imrimimos en un archivo el contendio del AST en formato JSON
+        // Salida del AST en formato JSON
         console.log(JSON.stringify(ast,null,2));
         return JSON.stringify(ast,null,2);
     } 

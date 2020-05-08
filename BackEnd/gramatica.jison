@@ -2,7 +2,8 @@
 
 %lex
 
-%options lex case-sensitive
+%options lex case-sensitive yylineno
+
 
 %% 
 
@@ -62,15 +63,16 @@
 "out"                       return 'ROUT';
 "print"                     return 'RPRINT';
 "println"                   return 'RPRINTLN';
+"import"                    return 'RIMPORT';
 
 \'[^\']\'		            {yytext = yytext.substr(1,yyleng-2); return 'CARACTER';};
 \"[^\"]*\"		            {yytext = yytext.substr(1,yyleng-2); return 'CADENA';};
-[0-9]+\b				    return 'ENTERO';
 [0-9]+("."[0-9]+)?\b  	    return 'DECIMAL';
-([a-zA-Z])[a-zA-Z_0-9]*	    return 'ID';
+[0-9]+\b				    return 'ENTERO';
+([a-zA-Z_])[a-zA-Z_0-9]* 	return 'ID';
 
 <<EOF>>                     return 'EOF';
-.                           return 'INVALID';
+.                           {AST_Tools.addErrorLexico(yytext,yylineno+1); return '';}
 
 /lex
 
@@ -86,13 +88,23 @@
 %left 'OPCIRCU'
 %left  UMENOS
 
-%start inicio
+%start init
+
 
 %% 
 
+init
+    : inicio EOF {AST_Tools.resetErrors();return $1;}
+;
+
 inicio
-    : instrucciones EOF
-        {return $1;}
+    : importes instrucciones  {$$=AST_Tools.BloquePrincipal($1,$2);}       
+    | instrucciones           {$$=AST_Tools.BloquePrincipal(undefined,$1);}  
+;
+
+importes
+    : importes RIMPORT ID PUNTOYCOMA    {$1.push($3);} 
+    | RIMPORT ID PUNTOYCOMA             {$$=AST_Tools.listaIDImportes($2);}
 ;
 
 instrucciones
@@ -104,15 +116,15 @@ instruccion
     : declaracion               {$$=$1}
     | asignacion                {$$=$1}
     | declaracion_asignacion    {$$=$1}
-    | declaracion_funcion
+    | declaracion_funcion       {$$=$1}
     | declaracion_metodo
 
     | RCLASS ID LLAVIZQ instrucciones LLAVDER                               {$$=AST_Tools.bloqueCLASE($2,$4);}
-    | ID PARIZQ lista_parametros PARDER PUNTOYCOMA                          {$$=AST_Tools.llamadaFuncion($1,$3);}
-    | ID PARIZQ PARDER PUNTOYCOMA                                           {$$=AST_Tools.llamadaFuncion($1,undefined);}
     | RSYSTEM PUNTO ROUT PUNTO RPRINT PARIZQ salida PARDER PUNTOYCOMA       {$$=AST_Tools.sentenciaPrint($7);}
     | RSYSTEM PUNTO ROUT PUNTO RPRINTLN PARIZQ salida PARDER PUNTOYCOMA     {$$=AST_Tools.sentenciaPrint($7);}
     | RSYSTEM PUNTO ROUT PUNTO RPRINTLN PARIZQ PARDER PUNTOYCOMA            {$$=AST_Tools.sentenciaPrint("\n");}
+    | llamada_funcion
+    | incremento_decremento PUNTOYCOMA
 
     | bloque_if 
     | bloque_switch
@@ -122,10 +134,10 @@ instruccion
 
     | sentencias_transferencia
 
-    | error { console.error('Error sintáctico: || ' + yytext + ' || en la linea: ' + this._$.first_line + ', y columna: ' + this._$.first_column); }
-    /*| error PUNTOYCOMA
-    | error LLAVIZQ
-    | error*/
+    | error PUNTOYCOMA { AST_Tools.addErrorSintactico(yytext,this._$.first_line,this._$.first_column); }
+    | error LLAVDER { AST_Tools.addErrorSintactico(yytext,this._$.first_line,this._$.first_column); }
+    //| error { AST_Tools.addErrorSintactico(yytext,this._$.first_line,this._$.first_column); }
+
     
 ;
 
@@ -135,7 +147,7 @@ lista_id
     :lista_id COMA ID   {$1.push($3);}                   
     |ID                 {$$=AST_Tools.listaID($1);}
 ;
-
+ 
 declaracion
     :RINT lista_id PUNTOYCOMA            { $$ = AST_Tools.declaracion($2, Tipo_Valor.NUMERO); }
     |RDOUBLE lista_id PUNTOYCOMA         { $$ = AST_Tools.declaracion($2, Tipo_Valor.DECIMAL); }
@@ -145,8 +157,8 @@ declaracion
 ;
 
 asignacion
-    :ID IGUAL expresion_cadena PUNTOYCOMA        { $$ = AST_Tools.asignacion($1, $3); }
-    |ID IGUAL expresion_numerica PUNTOYCOMA      { $$ = AST_Tools.asignacion($1, $3); }    
+    //:ID IGUAL expresion_cadena PUNTOYCOMA        { $$ = AST_Tools.asignacion($1, $3); }
+    :ID IGUAL expresion_numerica PUNTOYCOMA      { $$ = AST_Tools.asignacion($1, $3); }    
     |ID IGUAL expresion_logica PUNTOYCOMA        { $$ = AST_Tools.asignacion($1, $3); }
 ;
 
@@ -155,16 +167,17 @@ declaracion_asignacion
     |RDOUBLE lista_id IGUAL expresion_numerica PUNTOYCOMA    { $$ = AST_Tools.asignacion_declaracion($4,$2, Tipo_Valor.DECIMAL);}
     |RBOOLEAN lista_id IGUAL expresion_logica PUNTOYCOMA     { $$ = AST_Tools.asignacion_declaracion($4,$2, Tipo_Valor.BOOLEANO);}
     |RCHAR lista_id IGUAL CARACTER PUNTOYCOMA                { $$ = AST_Tools.asignacion_declaracion($4,$2, Tipo_Valor.CARACTER);}
-    |RSTRING lista_id IGUAL expresion_cadena PUNTOYCOMA      { $$ = AST_Tools.asignacion_declaracion($4,$2, Tipo_Valor.CADENA);}
+    |RSTRING lista_id IGUAL expresion_numerica PUNTOYCOMA    { $$ = AST_Tools.asignacion_declaracion($4,$2, Tipo_Valor.CADENA);}
+    //|RSTRING lista_id IGUAL expresion_cadena PUNTOYCOMA      { $$ = AST_Tools.asignacion_declaracion($4,$2, Tipo_Valor.CADENA);}
 
 ;
 
 asignacion_simple
-    : ID = expresion_numerica       { $$ = AST_Tools.asignacion($1, $3); }
+    : ID IGUAL expresion_numerica       { $$ = AST_Tools.asignacion($1, $3); }
 ;
 
 declaracion_asignacion_simple
-    :RINT ID IGUAL expresion_numerica   { $$ = AST_Tools.asignacion_declaracion($2, Tipo_Valor.NUMERO);} 
+    :RINT ID IGUAL expresion_numerica   { $$ = AST_Tools.asignacion_declaracion($4, Tipo_Valor.NUMERO);} 
 ;
 
 declaracion_funcion
@@ -189,13 +202,18 @@ declaracion_metodo
     | RVOID RMAIN PARIZQ  PARDER LLAVIZQ instrucciones LLAVDER              { $$ = AST_Tools.nuevoMetodoMain(undefined,$6);}
 ;
 
+llamada_funcion
+    : ID PARIZQ lista_parametros PARDER PUNTOYCOMA                          {$$=AST_Tools.llamadaFuncion($1,$3);}
+    | ID PARIZQ PARDER PUNTOYCOMA                                           {$$=AST_Tools.llamadaFuncion($1,undefined);}
+;
 
-/* SENTENCIAS DE EXPRESIONES  */
 
-expresion_cadena
+/* SENTENCIAS DE EXPRESIONES */ 
+
+/*expresion_cadena
     :expresion_cadena OPMAS expresion_cadena                { $$ = AST_Tools.operacionBinaria($1, $3, Tipo_Operacion.CONCATENACION);}
     |CADENA                                                 { $$ = AST_Tools.crearValor($1,Tipo_Valor.CADENA); }
-;
+; */
 
 expresion_numerica
     : OPMENOS expresion_numerica %prec UMENOS	            { $$ = AST_Tools.operacionUnaria ($2, Tipo_Operacion.NEGATIVO); }
@@ -210,6 +228,9 @@ expresion_numerica
 	| ENTERO											    { $$ = AST_Tools.crearValor(Number($1),Tipo_Valor.NUMERO); }
 	| DECIMAL											    { $$ = AST_Tools.crearValor(Number($1),Tipo_Valor.DECIMAL); }
 	| ID                                                    { $$ = AST_Tools.crearValor($1,Tipo_Valor.ID); }
+    | ID PARIZQ lista_parametros PARDER                     { $$ = AST_Tools.llamadaFuncion($1,$3);}
+    | ID PARIZQ PARDER                                      { $$ = AST_Tools.llamadaFuncion($1,undefined);}
+    | CADENA                                                { $$ = AST_Tools.crearValor($1,Tipo_Valor.CADENA); }
 
     | DECREMENTO ENTERO 									{ $$ = AST_Tools.operacionUnaria (Number($2), Tipo_Operacion.DECREMENTO); }
 	| DECREMENTO DECIMAL 									{ $$ = AST_Tools.operacionUnaria (Number($2), Tipo_Operacion.DECREMENTO); }
@@ -235,15 +256,17 @@ expresion_relacional
     |expresion_numerica NIGUAL expresion_numerica           { $$ = AST_Tools.operacionBinaria($1, $3, Tipo_Operacion.NO_IGUAL);}
     | RTRUE                                                 { $$ = AST_Tools.crearValor($1,Tipo_Valor.BOOLEANO);}
     | RFALSE                                                { $$ = AST_Tools.crearValor($1,Tipo_Valor.BOOLEANO);}
+    | PARIZQ expresion_logica PARDER                        { $$ = $2}
+    | NOT expresion_relacional                              { $$ = AST_Tools.operacionUnaria ($2,Tipo_Operacion.NOT);}
 ;
 
 expresion_logica
     : expresion_relacional AND expresion_relacional         { $$ = AST_Tools.operacionBinaria($1, $3, Tipo_Operacion.AND);}
     | expresion_relacional OR expresion_relacional          { $$ = AST_Tools.operacionBinaria($1, $3, Tipo_Operacion.OR);}
-    | NOT expresion_logica                                  { $$ = AST_Tools.operacionUnaria ($2,Tipo_Operacion.NOT);}
-    | PARIZQ expresion_logica PARDER                        { $$ = $2}
-    | PARIZQ expresion_logica PARDER OR expresion_logica    { $$ = AST_Tools.operacionBinaria($2, $5, Tipo_Operacion.OR);}
-    | PARIZQ expresion_logica PARDER AND expresion_logica   { $$ = AST_Tools.operacionBinaria($2, $5, Tipo_Operacion.AND);}
+    //| NOT expresion_logica                                  { $$ = AST_Tools.operacionUnaria ($2,Tipo_Operacion.NOT);}
+    //| PARIZQ expresion_logica PARDER                        { $$ = $2}
+    //| PARIZQ expresion_logica PARDER OR expresion_logica    { $$ = AST_Tools.operacionBinaria($2, $5, Tipo_Operacion.OR);}
+    //| PARIZQ expresion_logica PARDER AND expresion_logica   { $$ = AST_Tools.operacionBinaria($2, $5, Tipo_Operacion.AND);}
     | expresion_relacional                                  { $$ = $1}
 ;
 
@@ -258,10 +281,10 @@ sentencias_transferencia
     : RBREAK PUNTOYCOMA                         {$$=AST_Tools.nuevoBREAK();}          
     | RCONTINUE PUNTOYCOMA                      {$$=AST_Tools.nuevoCONTINUE();}  
     | RRETURN PUNTOYCOMA                        {$$=AST_Tools.nuevoRETURN(undefined,undefined);} 
-    | RRETURN expresion_logica PUNTOYCOMA       {$$=AST_Tools.nuevoCONTINUE($2,Tipo_Valor.BOOLEANO);} 
-    | RRETURN expresion_numerica PUNTOYCOMA     {$$=AST_Tools.nuevoCONTINUE($2,Tipo_Valor.NUMERO);} 
-    | RRETURN expresion_cadena PUNTOYCOMA       {$$=AST_Tools.nuevoCONTINUE($2,Tipo_Valor.CADENA);} 
-    | RRETURN CARACTER PUNTOYCOMA               {$$=AST_Tools.nuevoCONTINUE($2,Tipo_Valor.CARACTER);} 
+    | RRETURN expresion_logica PUNTOYCOMA       {$$=AST_Tools.nuevoRETURN($2,Tipo_Valor.BOOLEANO);} 
+    | RRETURN expresion_numerica PUNTOYCOMA     {$$=AST_Tools.nuevoRETURN($2,Tipo_Valor.NUMERO);} 
+    //| RRETURN expresion_cadena PUNTOYCOMA       {$$=AST_Tools.nuevoCONTINUE($2,Tipo_Valor.CADENA);} 
+    | RRETURN CARACTER PUNTOYCOMA               {$$=AST_Tools.nuevoRETURN($2,Tipo_Valor.CARACTER);} 
 ;
 
 parametros
@@ -270,20 +293,14 @@ parametros
 ;
 
 lista_parametros
-    : lista_parametros COMA ID          {$1.push(AST_Tools.nuevoParametro(Tipo_Valor.ID,$3));}  
-    | lista_parametros COMA ENTERO      {$1.push(AST_Tools.nuevoParametro(Tipo_Valor.NUMERO,$3));}  
-    | lista_parametros COMA DECIMAL     {$1.push(AST_Tools.nuevoParametro(Tipo_Valor.DECIMAL,$3));} 
-    | lista_parametros COMA CARACTER    {$1.push(AST_Tools.nuevoParametro(Tipo_Valor.CARACTER,$3));} 
-    | lista_parametros COMA CADENA      {$1.push(AST_Tools.nuevoParametro(Tipo_Valor.CADENA,$3));} 
-    | lista_parametros COMA RTRUE       {$1.push(AST_Tools.nuevoParametro(Tipo_Valor.BOOLEANO,$3));} 
-    | lista_parametros COMA RFALSE      {$1.push(AST_Tools.nuevoParametro(Tipo_Valor.BOOLEANO,$3));} 
-    | ID        {$$=AST_Tools.listaParametros(AST_Tools.nuevoParametro(Tipo_Valor.ID,$1));}
-    | ENTERO    {$$=AST_Tools.listaParametros(AST_Tools.nuevoParametro(Tipo_Valor.NUMERO,$1));}
-    | DECIMAL   {$$=AST_Tools.listaParametros(AST_Tools.nuevoParametro(Tipo_Valor.DECIMAL,$1));}
-    | CARACTER  {$$=AST_Tools.listaParametros(AST_Tools.nuevoParametro(Tipo_Valor.CARACTER,$1));}
-    | CADENA    {$$=AST_Tools.listaParametros(AST_Tools.nuevoParametro(Tipo_Valor.CADENA,$1));}
-    | RTRUE     {$$=AST_Tools.listaParametros(AST_Tools.nuevoParametro(Tipo_Valor.BOOLEANO,$1));}
-    | RFALSE    {$$=AST_Tools.listaParametros(AST_Tools.nuevoParametro(Tipo_Valor.BOOLEANO,$1));}
+    : lista_parametros COMA expresion_numerica  {$1.push(AST_Tools.nuevoParametro(undefined,$3));}  
+    | lista_parametros COMA CARACTER            {$1.push(AST_Tools.nuevoParametro(Tipo_Valor.CARACTER,$3));} 
+    | lista_parametros COMA RTRUE               {$1.push(AST_Tools.nuevoParametro(Tipo_Valor.BOOLEANO,$3));} 
+    | lista_parametros COMA RFALSE              {$1.push(AST_Tools.nuevoParametro(Tipo_Valor.BOOLEANO,$3));} 
+    | expresion_numerica                        {$$=AST_Tools.listaParametros(AST_Tools.nuevoParametro(undefined,$1));}
+    | CARACTER                                  {$$=AST_Tools.listaParametros(AST_Tools.nuevoParametro(Tipo_Valor.CARACTER,$1));}
+    | RTRUE                                     {$$=AST_Tools.listaParametros(AST_Tools.nuevoParametro(Tipo_Valor.BOOLEANO,$1));}
+    | RFALSE                                    {$$=AST_Tools.listaParametros(AST_Tools.nuevoParametro(Tipo_Valor.BOOLEANO,$1));}
 ;
 
 tipo

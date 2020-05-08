@@ -10,17 +10,21 @@
     <!--Declaracion de StylesSheets-->
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/codemirror.css">
+    <link rel="stylesheet" href="css/jsonview.css">
+
 
     <!--Declaracion de Scripts-->
+    <script src="js/codemirror.js"></script> 
+    <script src="js/jsonview.js"></script>
+    <script src="js/lodash.js"></script>
+
     <script type="text/javascript" src="js/tabPage.js"></script>
     <script type="text/javascript" src="js/archivos.js"></script>
     <script type="text/javascript" src="js/data.js"></script>
-    <script src="js/codemirror.js"></script>
 
     <!--Encabezado-->
     <div class="jumbotron text-center">
         <h1>Detector de Copias - Java </h1>
-        <p>Cristian Meoño - 201801397</p>
     </div>
 </head>
 
@@ -38,15 +42,38 @@
                 <label class="custom-file-label" for="inputFile">Abrir .java</label>
             </div>
         </div> 
-        <hr>
+        <br>
         <ul class="nav nav-tabs nav-fill" id="tabPageBtns">          
         </ul>
+    </div>
 
+    <hr>
+    <!--Botones de Reporte-->
+    <button class="btn btn-outline-danger col-md-2" onclick="">Reporte 1</button>
+    <button class="btn btn-outline-danger col-md-2 " onclick="">Reporte 2</button>
+    <button class="btn btn-outline-danger col-md-2 " onclick="limpiarAST()">Limpiar AST's</button>
+    <hr>
+    <!--Div de AST-->
+    <div id="myAST" class="divAST">
+    
+    </div>
+
+    <!--Div de Errores Lexicos-->
+    <hr>
+        <h5>Errores Lexicos</h5>
+    <div id="Lexicos" class="divLexicos">
+        
+    
     </div>
     <hr>
-    <!--Tabla de Errores Lexicos-->
-    <button class="btn btn-outline-danger col-md-4 " onclick="">Guardar como HTML</button>
-    <button class="btn btn-outline-danger col-md-4 " onclick="">Guardar como HTML</button>
+    <h5>Errores Sintacticos</h5>
+    <!--Div de Errores Sintacticos-->
+    <div id="Sintacticos" class="divSintacticos">
+        
+    
+    </div>
+
+    <br>
 </div>
 
 </body>

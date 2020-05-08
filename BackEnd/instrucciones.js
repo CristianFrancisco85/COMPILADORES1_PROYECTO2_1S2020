@@ -76,6 +76,9 @@ function operacionGenerica(opIzq, opDer, opTipo) {
 	}
 }
 
+let ErroresLexicos=[];
+let ErroresSintacticos=[];
+
 const AST_Tools = {
 
     /**
@@ -106,6 +109,20 @@ const AST_Tools = {
 		return {
 			valor: valor,
 			valTipo: valTipo
+		}
+	},
+
+	/**
+	 * Crea el bloque principal
+	 * @param valor 
+	 * @param valTipo 
+	 */
+	BloquePrincipal: function(importes, sentencias) {
+		return {
+			import: importes,
+			sentencias: sentencias,
+			ErroresLexicos:ErroresLexicos,
+			ErroresSintacticos:ErroresSintacticos
 		}
 	},
 	
@@ -196,6 +213,16 @@ const AST_Tools = {
 	},
 
 	/**
+	 * Crea una lista de id para import
+	 * @param id 
+	 */
+	listaIDImportes: function (id) {
+		var idsImport = []; 
+		idsImport.push(id);
+		return idsImport;
+	},
+
+	/**
 	 * Crea una funcion nueva
 	 * @param tipo Tipo de retorno de la funcion
 	 * @param id Identificador de la funcion
@@ -246,13 +273,12 @@ const AST_Tools = {
 	 * @param id Identificador
 	 * @param tipo Tipo de dato
 	 */
-	nuevoParametro: function (tipo,id){
+	nuevoParametro: function (tipo,valor){
 		return {
 			tipo: tipo,
-			id: id,
+			valor: valor,
 		}
 	},
-
 
 	/**
 	 * Crea una lista de parametros
@@ -365,7 +391,6 @@ const AST_Tools = {
 		}
 	},
 
-
 	/**
 	 * Crea un nuevo bloque For
 	 * @param operacionInicial Asignacion o Declaracion-Asignacion
@@ -409,7 +434,7 @@ const AST_Tools = {
 		return {
 			tipo: Tipo_Instruccion.RETURN,
 			valor: valor,
-			tipo:tipo
+			tipo_retorno:tipo
 		}
 	},
 
@@ -434,8 +459,33 @@ const AST_Tools = {
 		}
 	},
 
+	/**
+	 * Añade un nuevo error Lexico
+	 */
+	addErrorLexico:function(error,fila){
+		ErroresLexicos.push(
+		{
+			Error:error,
+			Fila:fila,
+		});
+	},
 
+	 /**
+	 * Añade un nuevo error Sintactico
+	 */
+	addErrorSintactico:function(error,fila,columa){
+		ErroresSintacticos.push(
+		{
+			Error:error,
+			Fila:fila,
+			Columna:columa
+		});
+	},
 
+	resetErrors:function(){
+		ErroresSintacticos=[];
+		ErroresLexicos=[];
+	}
 
 
 
@@ -446,3 +496,5 @@ module.exports.Tipo_Operacion = Tipo_Operacion;
 module.exports.Tipo_Instruccion = Tipo_Instruccion;
 module.exports.Tipo_Valor = Tipo_Valor;
 module.exports.AST_Tools = AST_Tools;
+module.exports.ErroresLexicos = ErroresLexicos;
+module.exports.ErroresSintacticos = ErroresSintacticos;

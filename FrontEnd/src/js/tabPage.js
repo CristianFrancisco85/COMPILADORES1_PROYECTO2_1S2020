@@ -1,5 +1,7 @@
 var tabIndex=0;
 var ArregloEditor=[];
+
+
 function openEditorTab(evt, tabName) {
 
     var i, tabcontent, tabBtns;
@@ -49,12 +51,12 @@ function addTab(){
     newTxtArea.className="col-md-12 form-control"
     newTxtArea.id="txtArea"+tabIndex;
     newTxtArea.rows=50;
-    //newTab.appendChild(newTxtArea);
 
     var editor=CodeMirror(newTab,{
         lineNumbers:true,
         matchBrackets: true
     });
+    newTab.style.display = "none";
     ArregloEditor.push(editor)
 
 
