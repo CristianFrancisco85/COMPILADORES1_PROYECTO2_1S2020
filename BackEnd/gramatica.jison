@@ -16,6 +16,7 @@
 "boolean"                   return 'RBOOLEAN';
 "char"                      return 'RCHAR';
 "String"                    return 'RSTRING';
+"string"                    return 'RSTRING';
 "/"                         return 'OPDIVISION';
 "*"                         return 'OPMULTI';
 "%"                         return 'OPMOD';
@@ -65,8 +66,8 @@
 "println"                   return 'RPRINTLN';
 "import"                    return 'RIMPORT';
 
-\'[^\']\'		            {yytext = yytext.substr(1,yyleng-2); return 'CARACTER';};
-\"[^\"]*\"		            {yytext = yytext.substr(1,yyleng-2); return 'CADENA';};
+\'(\\n|\\t|\\r|\\\"|\\\'|[^\'])\'   {yytext = yytext.substr(1,yyleng-2); return 'CARACTER';};
+\"(\\\"|[^\"])*\"                   {yytext = yytext.substr(1,yyleng-2); return 'CADENA';};
 [0-9]+("."[0-9]+)?\b  	    return 'DECIMAL';
 [0-9]+\b				    return 'ENTERO';
 ([a-zA-Z_])[a-zA-Z_0-9]* 	return 'ID';

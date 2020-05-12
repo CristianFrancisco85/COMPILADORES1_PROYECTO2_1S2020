@@ -273,10 +273,10 @@ const AST_Tools = {
 	 * @param id Identificador
 	 * @param tipo Tipo de dato
 	 */
-	nuevoParametro: function (tipo,valor){
+	nuevoParametro: function (tipo,id){
 		return {
 			tipo: tipo,
-			valor: valor,
+			id: id,
 		}
 	},
 
