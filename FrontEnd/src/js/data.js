@@ -57,13 +57,6 @@ function addAST(value){
 
 }
 
-function limpiarAST(){
-
-    document.getElementById("myAST").innerHTML="";
-
-}
-
-
 /*Para las copias se manejara un arreglo de clases
 donde se guardan unicamente sus metodos 
 Este arreglo lo vacia el usuario mediante un boton
@@ -71,6 +64,18 @@ Este arreglo lo vacia el usuario mediante un boton
 
 var ClasesArr=[];
 
+function limpiarAST(){
+
+    document.getElementById("myAST").innerHTML="";
+    var divCopias = document.getElementById("myClases");
+    var divFunciones = document.getElementById("myFunciones");
+    var divVariables = document.getElementById("myVariables");
+    divCopias.innerHTML="";
+    divFunciones.innerHTML="";
+    divVariables.innerHTML="";
+    ClasesArr=[]
+
+}
 
 
 function analizarCopias(data){
