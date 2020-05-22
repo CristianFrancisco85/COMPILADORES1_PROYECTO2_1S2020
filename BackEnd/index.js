@@ -1,8 +1,5 @@
-// cargar el modulo de express
 const express = require("express");
-// y crea una instancia de la aplicación express
 const app = express();
-// cargar body parser para leer el body de los request
 const bodyParser = require("body-parser");
 
 const parser = require('./gramatica.js');
