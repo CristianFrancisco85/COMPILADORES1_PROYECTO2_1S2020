@@ -29,8 +29,8 @@
 ")"                         return 'PARDER';
 "{"                         return 'LLAVIZQ';
 "}"                         return 'LLAVDER';
-">="                        return 'MENORIG';
-"<="                        return 'MAYORIG';
+">="                        return 'MAYORIG';
+"<="                        return 'MENORIG';
 ">"                         return 'MENOR';
 "<"                         return 'MAYOR';
 "=="                        return 'DIGUAL';
